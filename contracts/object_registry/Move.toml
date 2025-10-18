@@ -1,0 +1,14 @@
+[package]
+name = "object_registry"
+version = "0.1.0"
+authors = ["dev-Basscee"]
+
+[dependencies]
+Sui = { git = "https://github.com/MystenLabs/sui", subdir = "crates/sui-framework/packages/sui-framework", rev = "main" }
+
+[addresses]
+# Named address for this package's modules
+registration = "0x0"
+# Sui stdlib and framework addresses
+std = "0x1"
+sui = "0x2"
