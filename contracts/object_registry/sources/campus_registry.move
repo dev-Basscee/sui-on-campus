@@ -1,52 +1,102 @@
-module registration::object_registry {
-    use std::vector;
-    use sui::object;
-    use sui::tx_context as tx_context;
-    use sui::tx_context::TxContext;
-use sui::transfer;
+module registration::campus_registry {
+    use std::string::String;
+    use sui::table::{Self, Table};
 
-/// A simple struct to hold the object fields. Not a resource.
-    struct CampusObject has store { 
-        id: u64,
-        name: vector<u8>,
-        department: vector<u8>,
-        registration_number: vector<u8>,
-    }
+    /// Error codes
+    const EAlreadyRegistered: u64 = 1;
+    const ENotRegistered: u64 = 2;
 
-    /// Registry object stored on Sui. Contains a UID, a counter and a vector of objects.
-    struct Registry has key {
+    /// A registration badge given to users who successfully register
+    /// This badge is required to create and manage todo lists
+    public struct RegistrationBadge has key, store {
         id: object::UID,
-        next_id: u64,
-        objects: vector<CampusObject>,
+        student_id: u64,
+        name: String,
+        department: String,
+        registration_number: String,
+        registration_date: u64,
     }
 
-    /// Initialize a new Registry object and transfer it to the transaction sender.
-    public entry fun init_registry(ctx: &mut TxContext) {
-        let registry = Registry {
+    /// Main campus registry - shared object accessible by anyone
+    public struct CampusRegistry has key {
+        id: object::UID,
+        next_student_id: u64,
+        // Maps address to student_id for lookup
+        registered_users: Table<address, u64>,
+        // Total number of registered users
+        total_registered: u64,
+    }
+
+    /// One-time initialization - creates a shared registry
+    fun init(ctx: &mut tx_context::TxContext) {
+        let registry = CampusRegistry {
             id: object::new(ctx),
-            next_id: 1,
-            objects: vector::empty<CampusObject>(),
+            next_student_id: 1000, // Start from 1000 for student IDs
+            registered_users: table::new(ctx),
+            total_registered: 0,
         };
-        transfer::transfer(registry, tx_context::sender(ctx));
+        // Share the registry so anyone can access it
+        transfer::share_object(registry);
     }
 
-    /// Create a new object; id is auto-generated and the object is appended to the Registry.objects vector.
-    /// Returns the assigned id.
-    public entry fun create_object(registry: &mut Registry, name: vector<u8>, department: vector<u8>, registration_number: vector<u8>): u64 {
-        let id = registry.next_id;
-        registry.next_id = id + 1;
-        let obj = CampusObject { id, name, department, registration_number };
-        vector::push_back<CampusObject>(&mut registry.objects, obj);
-        id
+    /// Register a new user to the campus system
+    /// Gives them a RegistrationBadge that allows them to use the todo system
+    entry fun register(
+        registry: &mut CampusRegistry,
+        name: String,
+        department: String,
+        registration_number: String,
+        ctx: &mut tx_context::TxContext
+    ) {
+        let sender = tx_context::sender(ctx);
+        
+        // Check if user is already registered
+        assert!(!table::contains(&registry.registered_users, sender), EAlreadyRegistered);
+        
+        // Generate new student ID
+        let student_id = registry.next_student_id;
+        registry.next_student_id = student_id + 1;
+        
+        // Add to registry
+        table::add(&mut registry.registered_users, sender, student_id);
+        registry.total_registered = registry.total_registered + 1;
+        
+        // Create and transfer registration badge to user
+        let badge = RegistrationBadge {
+            id: object::new(ctx),
+            student_id,
+            name,
+            department,
+            registration_number,
+            registration_date: tx_context::epoch(ctx),
+        };
+        
+        transfer::transfer(badge, sender);
     }
 
-    /// Get how many objects are stored in the given registry.
-    public fun object_count(registry: &Registry): u64 {
-        vector::length(&registry.objects)
+    /// Check if an address is registered
+    public fun is_registered(registry: &CampusRegistry, user: address): bool {
+        table::contains(&registry.registered_users, user)
     }
 
-    // Note: Reading objects' fields by value (without removing them) requires copying complex types
-    // which is non-trivial in Move. For simplicity this package focuses on creating and counting objects.
-    // Extensions can add indexed lookup utilities (e.g., remove or return clones) using std libraries.
+    /// Get the student ID for a registered user
+    public fun get_student_id(registry: &CampusRegistry, user: address): u64 {
+        assert!(table::contains(&registry.registered_users, user), ENotRegistered);
+        *table::borrow(&registry.registered_users, user)
+    }
 
+    /// Get total number of registered users
+    public fun get_total_registered(registry: &CampusRegistry): u64 {
+        registry.total_registered
+    }
+
+    /// Verify that a badge is valid (helper function for todo module)
+    public fun verify_badge(badge: &RegistrationBadge): u64 {
+        badge.student_id
+    }
+
+    /// Get badge details for display
+    public fun get_badge_details(badge: &RegistrationBadge): (u64, String, String, String) {
+        (badge.student_id, badge.name, badge.department, badge.registration_number)
+    }
 }
