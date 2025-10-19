@@ -2,6 +2,7 @@
 name = "object_registry"
 version = "0.1.0"
 authors = ["dev-Basscee"]
+edition = "2024.beta"
 
 [dependencies]
 Sui = { git = "https://github.com/MystenLabs/sui", subdir = "crates/sui-framework/packages/sui-framework", rev = "main" }
