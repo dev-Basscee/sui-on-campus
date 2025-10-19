@@ -1,0 +1,35 @@
+# OS/editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+
+# Node/TypeScript
+node_modules/
+dist/
+build/
+coverage/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Sui Move build artifacts
+contracts/**/build/
+contracts/**/locks/
+contracts/**/Move.lock
+
+# Sui client local config and keys (DO NOT COMMIT SECRETS)
+/.sui/
+**/sui_config/
+**/sui.keystore
+
+# Env files
+.env
+.env.*
+
+# Backup/temp
+*.tmp
+*.swp
+*.swo
+~$*
