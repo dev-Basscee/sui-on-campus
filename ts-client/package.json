@@ -1,0 +1,20 @@
+{
+  "name": "sui-on-campus-ts-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+	"build": "tsc -p .",
+	"start": "node dist/index.js",
+	"dev": "ts-node --esm src/index.ts"
+  },
+  "dependencies": {
+	"@mysten/sui.js": "^0.54.1",
+	"dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+	"ts-node": "^10.9.2",
+	"typescript": "^5.4.5",
+	"@types/node": "^20.12.12"
+  }
+}
