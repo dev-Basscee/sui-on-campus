@@ -3,9 +3,9 @@ module registration::object_registry {
     use sui::object;
     use sui::tx_context as tx_context;
     use sui::tx_context::TxContext;
-    use sui::transfer;
+use sui::transfer;
 
-    /// A simple struct to hold the object fields. Not a resource.
+/// A simple struct to hold the object fields. Not a resource.
     struct CampusObject has store { 
         id: u64,
         name: vector<u8>,
@@ -44,4 +44,9 @@ module registration::object_registry {
     public fun object_count(registry: &Registry): u64 {
         vector::length(&registry.objects)
     }
+
+    // Note: Reading objects' fields by value (without removing them) requires copying complex types
+    // which is non-trivial in Move. For simplicity this package focuses on creating and counting objects.
+    // Extensions can add indexed lookup utilities (e.g., remove or return clones) using std libraries.
+
 }
