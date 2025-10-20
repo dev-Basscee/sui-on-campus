@@ -33,3 +33,10 @@ contracts/**/Move.lock
 *.swp
 *.swo
 ~$*
+
+ARCHITECTURE.md
+DEPLOYMENT.md
+quick-start.sh
+scripts/deploy_sui_testnet.sh
+scripts/deploy_sui_mainnet.sh
+publish_devnet.sh
